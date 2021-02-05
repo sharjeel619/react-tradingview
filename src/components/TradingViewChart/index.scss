@@ -1,0 +1,8 @@
+#chart_container {
+  padding: 0 1rem;
+  iframe {
+    box-shadow: 0 0  6px 4px rgba(200,200,200, .3);
+    max-width: 100% !important;
+    border-radius: 10px;
+  }
+}
