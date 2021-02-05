@@ -7,7 +7,7 @@ export const options = {
   fullscreen: false,
   autosize: false,
   symbol: 'BTCUSDT',
-  interval: '1D',
+  interval: '1',
   theme: 'light',
   allow_symbol_change: true,
   width: 800,
