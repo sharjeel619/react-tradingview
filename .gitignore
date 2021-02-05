@@ -23,7 +23,7 @@
 # misc
 /connect.lock
 /coverage/*
-/*/scripts/*
+# /*/scripts/*
 /report_*
 /reports/
 .sass-cache/
