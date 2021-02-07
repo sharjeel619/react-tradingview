@@ -17,7 +17,6 @@ export default class Home extends Component {
   }
 
   getTheme = (val) => {
-    console.log(val)
   }
 
   render() {

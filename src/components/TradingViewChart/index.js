@@ -44,9 +44,7 @@ export default class TradingViewChart extends Component {
     // Can use global context for changing/setting values 
     this.props.getTheme(this.tradingViewWidget.getTheme())
     this.chartObject = this.tradingViewWidget.chart()
-    this.tradingViewWidget.save((obj) => {
-      console.log(obj)
-    })
+    this.tradingViewWidget.save((obj) => {})
   }
 
   render() {

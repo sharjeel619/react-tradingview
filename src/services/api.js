@@ -1,7 +1,9 @@
+import binanceWS from './socketClient'
 export default class binanceAPI {
   constructor(options) {
     this.binanceHost = 'https://api.binance.com'
     this.debug = options.debug || false
+    this.ws = new binanceWS()
   }
 
   binanceServerTime() {
@@ -21,12 +23,7 @@ export default class binanceAPI {
   }
 
   binanceKlines(symbol, interval, startTime, endTime, limit) {
-    const url = this.binanceHost + '/api/v1/klines' +
-      "?symbol=".concat(symbol) +
-      "&interval=".concat(interval) +
-      "&limit=".concat(limit) +
-      "&startTime=".concat(startTime) +
-      "&endTime=".concat(endTime)
+    const url = `${this.binanceHost}/api/v1/klines?symbol=${symbol}&interval=${interval}${startTime ? `&startTime=${startTime}` : ''}${endTime ? `&endTime=${endTime}`: ''}${limit ? `&limit=${limit}` : ''}`
 
     return fetch(url).then(res => {
       return res.json()
@@ -111,92 +108,35 @@ export default class binanceAPI {
     onResolveErrorCallback('not found')
   }
 
-  getBars(symbolInfo, resolution, from, to, onHistoryCallback, onErrorCallback, firstDataRequest) {
-    if (this.debug) {
-      console.log('👉 getBars:', symbolInfo.name, resolution)
-      console.log('First:', firstDataRequest)
-      console.log('From:', from, '(' + new Date(from * 1000).toGMTString() + ')')
-      console.log('To:  ', to, '(' + new Date(to * 1000).toGMTString() + ')')
-    }
-
-    const interval = {
-      '1': '1m',
-      '3': '3m',
-      '5': '5m',
-      '15': '15m',
-      '30': '30m',
-      '60': '1h',
-      '120': '2h',
-      '240': '4h',
-      '360': '6h',
-      '480': '8h',
-      '720': '12h',
-      'D': '1d',
-      '1D': '1d',
-      '3D': '3d',
-      'W': '1w',
-      '1W': '1w',
-      'M': '1M',
-      '1M': '1M',
-    }[resolution]
-
-    if (!interval) {
-      onErrorCallback('Invalid interval')
-    }
-
-    let totalKlines = []
-
-    const finishKlines = () => {
-      if (this.debug) {
-        console.log('📊:', totalKlines.length)
-      }
-
-      if (totalKlines.length == 0) {
-        onHistoryCallback([], { noData: true })
-      } else {
-        onHistoryCallback(totalKlines.map(kline => {
-          return {
-            time: kline[0],
-            close: parseFloat(kline[4]),
-            open: parseFloat(kline[1]),
-            high: parseFloat(kline[2]),
-            low: parseFloat(kline[3]),
-            volume: parseFloat(kline[5])
-          }
-        }), {
-          noData: false
-        })
+  async getBars(symbolInfo, resolution, from, to, onHistoryCallback, onErrorCallback, firstDataRequest) {
+    try {
+      let interval = this.ws.tvIntervals[resolution]
+      to *= 1000
+      let data = await this.binanceKlines(symbolInfo.name, interval ,null, to)
+      if (!data || !data.length) onHistoryCallback([], { noData: true })
+      else {
+        data = data.map(item => ({
+          time: item[0],
+          close: parseFloat(item[4]),
+          open: parseFloat(item[1]),
+          high: parseFloat(item[2]),
+          low: parseFloat(item[3]),
+          volume: parseFloat(item[5])
+        }))
+        onHistoryCallback(data, { noData: true })
       }
     }
-
-    const getKlines = (from, to) => {
-      this.binanceKlines(symbolInfo.name, interval, from, to, 500).then(klines => {
-        totalKlines = totalKlines.concat(klines)
-
-        if (klines.length == 500) {
-          from = klines[klines.length - 1][0] + 1
-          getKlines(from, to)
-        } else {
-          finishKlines()
-        }
-      }).catch(err => {
-        console.error(err)
-        onErrorCallback('Some problem')
-      })
+    catch(e) {
+      console.error(e)
     }
-
-    from *= 1000
-    to *= 1000
-
-    getKlines(from, to)
   }
 
   subscribeBars(symbolInfo, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) {
-    this.debug && console.log('👉 subscribeBars:', subscriberUID)
+    this.ws.subscribeOnStream(symbolInfo, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback)
   }
 
   unsubscribeBars(subscriberUID) {
-    this.debug && console.log('👉 unsubscribeBars:', subscriberUID)
+    this.ws.unsubscribeFromStream(subscriberUID)
   }
 
   getServerTime(callback) {
