@@ -28,6 +28,7 @@ export default class SocketClient {
     this.lastSocketData = {}
     this.listener = null,
     this.paramStr = ''
+    this.streams = {} // e.g: {'BTCUSDT': { paramStr: '', data:{}, listener:  } }
   }
 
   _createSocket() {
@@ -46,10 +47,11 @@ export default class SocketClient {
 
     this._ws.onmessage = (msg) => {
       let sData = JSON.parse(msg.data)
-      // console.log(sData)
       if (sData && sData.k) {
+        let {s, E} = sData
         let {o ,h, l, v, c, T ,t} = sData.k
-        this.lastSocketData = {
+        // Update data
+        let lastSocketData = {
           time: t,
           close: parseFloat(c),
           open: parseFloat(o),
@@ -59,34 +61,43 @@ export default class SocketClient {
           closeTime: T,
           openTime: t,
         }
-        this.listener(this.lastSocketData)
+        this.streams[s].data = lastSocketData
+        this.streams[s].listener(lastSocketData)
       }
+      console.log(this.streams)
     }
   }
 
   subscribeOnStream(symbolInfo, resolution, onRealtimeCallback, subscribeUID, onResetCacheNeededCallback, lastDailyBar) {
+    // console.log(symbolInfo)
     console.log(subscribeUID)
-    this.paramStr = `${symbolInfo.name.toLowerCase()}@kline_${this.tvIntervals[resolution]}`
+    let paramStr = `${symbolInfo.name.toLowerCase()}@kline_${this.tvIntervals[resolution]}`
     const obj = {
       method: "SUBSCRIBE",
       params: [
-        this.paramStr
+        paramStr
       ],
       id: 1
     }
     if (this._ws.readyState === 1) {
       this._ws.send(JSON.stringify(obj))
+      this.streams[symbolInfo.name] = {
+        paramStr,
+        listener: onRealtimeCallback
+      }
     }
     this.listener = onRealtimeCallback
   }
   unsubscribeFromStream(subscriberUID) {
+    let id = subscriberUID.split("_")[0]
     const obj = {
       method: "UNSUBSCRIBE",
       params: [
-        this.paramStr
+        this.streams[id].paramStr
       ],
       id: 1
     }
+    delete this.streams[id]
     if (this._ws.readyState === 1) {
       this._ws.send(JSON.stringify(obj))
     }
