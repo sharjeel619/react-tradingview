@@ -3,7 +3,7 @@ import React, {
 } from 'react'
 import './index.scss'
 import TradingViewChart from '../../components/TradingViewChart'
-import {options} from '../../global/tv'
+import { options } from '../../global/tv'
 
 export default class Home extends Component {
   constructor() {
@@ -11,12 +11,6 @@ export default class Home extends Component {
     this.state = {
       ...options,
     }
-  }
-
-  componentDidMount() {
-  }
-
-  getTheme = (val) => {
   }
 
   render() {
@@ -29,7 +23,7 @@ export default class Home extends Component {
           </a>
         </header>
         <div className="trading-chart">
-          <TradingViewChart cOptions={this.state} getTheme={this.getTheme} />
+          <TradingViewChart cOptions={this.state} />
         </div>
       </div>
     )

@@ -27,7 +27,7 @@ export default class SocketClient {
     }
     this.lastSocketData = {}
     this.listener = null,
-    this.paramStr = ''
+      this.paramStr = ''
     this.streams = {} // e.g: {'BTCUSDT': { paramStr: '', data:{}, listener:  } }
   }
 
@@ -48,8 +48,8 @@ export default class SocketClient {
     this._ws.onmessage = (msg) => {
       let sData = JSON.parse(msg.data)
       if (sData && sData.k) {
-        let {s, E} = sData
-        let {o ,h, l, v, c, T ,t} = sData.k
+        let { s, E } = sData
+        let { o, h, l, v, c, T, t } = sData.k
         // Update data
         let lastSocketData = {
           time: t,
@@ -64,13 +64,10 @@ export default class SocketClient {
         this.streams[s].data = lastSocketData
         this.streams[s].listener(lastSocketData)
       }
-      console.log(this.streams)
     }
   }
 
   subscribeOnStream(symbolInfo, resolution, onRealtimeCallback, subscribeUID, onResetCacheNeededCallback, lastDailyBar) {
-    // console.log(symbolInfo)
-    console.log(subscribeUID)
     let paramStr = `${symbolInfo.name.toLowerCase()}@kline_${this.tvIntervals[resolution]}`
     const obj = {
       method: "SUBSCRIBE",
@@ -81,6 +78,7 @@ export default class SocketClient {
     }
     if (this._ws.readyState === 1) {
       this._ws.send(JSON.stringify(obj))
+      //register multiple streams in streams object
       this.streams[symbolInfo.name] = {
         paramStr,
         listener: onRealtimeCallback
@@ -88,6 +86,7 @@ export default class SocketClient {
     }
     this.listener = onRealtimeCallback
   }
+
   unsubscribeFromStream(subscriberUID) {
     let id = subscriberUID.split("_")[0]
     const obj = {
