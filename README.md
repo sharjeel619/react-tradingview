@@ -4,7 +4,7 @@ This project uses [Binance API](https://github.com/binance/binance-spot-api-docs
 
 ## Installation
 
-Put **charting_library** folder inside **scripts** folder. Then put that **scripts** folder in **src** directory and **public** directory as well.
+Put **charting_library** folder inside **public/scripts** folder.
 
 `yarn install`
 
