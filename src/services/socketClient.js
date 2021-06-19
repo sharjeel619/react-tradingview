@@ -1,7 +1,6 @@
 export default class SocketClient {
   constructor(base_url, path) {
-    this.baseUrl = 'wss://stream.binance.com:9443/ws' || base_url;
-    this._path = path || '';
+    this.baseUrl = 'wss://stream.binance.com:9443/ws'
     this.tvIntervals = {
       '1': '1m',
       '3': '3m',
@@ -22,81 +21,98 @@ export default class SocketClient {
       'M': '1M',
       '1M': '1M',
     };
-    this.lastSocketData = {};
-    this.listener = null;
-    this.paramStr = '';
     this.streams = {}; // e.g: {'BTCUSDT': { paramStr: '', data:{}, listener:  } }
     this._createSocket();
   }
 
   _createSocket() {
-    this._ws = new WebSocket(`${this.baseUrl}${this._path}`)
+    this._ws = new WebSocket(this.baseUrl)
     this._ws.onopen = (e) => {
       console.info(`Binance WS Open`)
+      localStorage.setItem("wsStatus", 1)
     }
 
     this._ws.onclose = () => {
       console.warn('Binance WS Closed')
+      localStorage.setItem("wsStatus", 0)
     }
 
     this._ws.onerror = (err) => {
       console.warn('WS Error', err)
+      localStorage.setItem("wsStatus", 0)
     }
 
     this._ws.onmessage = (msg) => {
+      if (!msg?.data) return
       let sData = JSON.parse(msg.data)
-      if (sData && sData.k) {
-        let { s, E } = sData
-        let { o, h, l, v, c, T, t } = sData.k
-        // Update data
-        let lastSocketData = {
-          time: t,
-          close: parseFloat(c),
-          open: parseFloat(o),
-          high: parseFloat(h),
-          low: parseFloat(l),
-          volume: parseFloat(v),
-          closeTime: T,
-          openTime: t,
+      try {
+        if (sData && sData.k) {
+          let { s, E } = sData
+          let { o, h, l, v, c, T, t } = sData.k
+          // Update data
+          let lastSocketData = {
+            time: t,
+            close: parseFloat(c),
+            open: parseFloat(o),
+            high: parseFloat(h),
+            low: parseFloat(l),
+            volume: parseFloat(v),
+            closeTime: T,
+            openTime: t,
+          }
+          if (Object.keys(this.streams).length) {
+            this.streams[s].data = lastSocketData
+            this.streams[s].listener(lastSocketData)
+          }
         }
-        this.streams[s].data = lastSocketData
-        this.streams[s].listener(lastSocketData)
       }
+      catch (e) {
+        console.error(e)
+      }
+
     }
   }
 
   subscribeOnStream(symbolInfo, resolution, onRealtimeCallback, subscribeUID, onResetCacheNeededCallback, lastDailyBar) {
-    let paramStr = `${symbolInfo.name.toLowerCase()}@kline_${this.tvIntervals[resolution]}`
-    const obj = {
-      method: "SUBSCRIBE",
-      params: [
-        paramStr
-      ],
-      id: 1
-    }
-    if (this._ws.readyState === 1) {
-      this._ws.send(JSON.stringify(obj))
-      //register multiple streams in streams object
-      this.streams[symbolInfo.name] = {
-        paramStr,
-        listener: onRealtimeCallback
+    try {
+      let paramStr = `${symbolInfo.name.toLowerCase()}@kline_${this.tvIntervals[resolution]}`
+      const obj = {
+        method: "SUBSCRIBE",
+        params: [
+          paramStr
+        ],
+        id: 1
+      }
+      if (this._ws.readyState === 1) {
+        this._ws.send(JSON.stringify(obj))
+        this.streams[symbolInfo.name] = {  //register multiple streams in streams object
+          paramStr,
+          listener: onRealtimeCallback
+        }
       }
     }
-    this.listener = onRealtimeCallback
+    catch (e) {
+      console.error(e)
+    }
   }
 
   unsubscribeFromStream(subscriberUID) {
-    let id = subscriberUID.split("_")[0]
-    const obj = {
-      method: "UNSUBSCRIBE",
-      params: [
-        this.streams[id].paramStr
-      ],
-      id: 1
+    try {
+      let id = subscriberUID.split("_")[0]
+      const obj = {
+        method: "UNSUBSCRIBE",
+        params: [
+          this.streams[id].paramStr
+        ],
+        id: 1
+      }
+      delete this.streams[id]
+      if (this._ws.readyState === 1) {
+        this._ws.send(JSON.stringify(obj))
+      }
     }
-    delete this.streams[id]
-    if (this._ws.readyState === 1) {
-      this._ws.send(JSON.stringify(obj))
+    catch (e) {
+      console.error(e)
     }
   }
 }
