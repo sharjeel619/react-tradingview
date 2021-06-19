@@ -12,7 +12,7 @@ export default class TradingViewChart extends Component {
       container_id: "chart_container",
       datafeed: this.bfAPI,
       library_path: "/scripts/charting_library/",
-      symbol: 'BTCUSDT',
+      disabled_features: ["timeframes_toolbar", "header_undo_redo"],
       ...chartProperties
     };
     this.tradingViewWidget = null;

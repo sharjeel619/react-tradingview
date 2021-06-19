@@ -13,12 +13,11 @@ export default class Home extends Component {
       debug: false,
       fullscreen: false,
       symbol: 'BTCUSDT',
-      interval: '60', // '1', '3', '5', '15', '30', '60', '120', '240', '360', '480', '720', '1D', '3D', '1W', '1M'
+      interval: '60',
       theme: 'light',
       allow_symbol_change: true,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       autosize: true,
-      width: 800,
-      height: 500
     }
   }
 
@@ -30,7 +29,7 @@ export default class Home extends Component {
             This project uses Tradingview library along with Binance API and
             Binance Websockets to display different markets on the chart.
           </h2>
-          <TradingViewChart chartOptions={this.cOptions} />
+          <TradingViewChart chartProperties={this.cOptions} />
         </div>
       </div>
     );

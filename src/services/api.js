@@ -24,6 +24,7 @@ export default class binanceAPI {
     })
   }
 
+  // chart specific functions below, impt that their function names stay same
   onReady(callback) {
     this.binanceSymbols().then((symbols) => {
       this.symbols = symbols
@@ -86,7 +87,7 @@ export default class binanceAPI {
             session: '24x7',
             minmov: 1,
             pricescale: pricescale(symbol),
-            timezone: 'UTC',
+            // timezone: 'UTC',
             has_intraday: true,
             has_daily: true,
             has_weekly_and_monthly: true,
@@ -96,31 +97,55 @@ export default class binanceAPI {
         return
       }
     }
-
+    // minmov/pricescale will give the value of decimal places that will be shown on y-axis of the chart
+    //
     onResolveErrorCallback('not found')
   }
 
-  async getBars(symbolInfo, resolution, from, to, onHistoryCallback, onErrorCallback, firstDataRequest) {
-    try {
-      let interval = this.ws.tvIntervals[resolution]
-      to *= 1000
-      let data = await this.binanceKlines(symbolInfo.name, interval, null, to)
-      if (!data || !data.length) onHistoryCallback([], { noData: true })
-      else {
-        data = data.map(item => ({
-          time: item[0],
-          close: parseFloat(item[4]),
-          open: parseFloat(item[1]),
-          high: parseFloat(item[2]),
-          low: parseFloat(item[3]),
-          volume: parseFloat(item[5])
+  getBars(symbolInfo, resolution, from, to, onHistoryCallback, onErrorCallback, firstDataRequest) {
+    const interval = this.ws.tvIntervals[resolution]
+    if (!interval) {
+      onErrorCallback('Invalid interval')
+    }
+
+    let totalKlines = []
+    const kLinesLimit = 500
+    const finishKlines = () => {
+      if (totalKlines.length === 0) {
+        onHistoryCallback([], { noData: true })
+      } else {
+        let historyCBArray = totalKlines.map(kline => ({
+          time: kline[0],
+          open: parseFloat(kline[1]),
+          high: parseFloat(kline[2]),
+          low: parseFloat(kline[3]),
+          close: parseFloat(kline[4]),
+          volume: parseFloat(kline[5])
         }))
-        onHistoryCallback(data, { noData: true })
+        onHistoryCallback(historyCBArray, { noData: false })
       }
     }
-    catch (e) {
-      console.error(e)
+
+    const getKlines = async (from, to) => {
+      try {
+        const data = await this.binanceKlines(symbolInfo.name, interval, from, to, kLinesLimit)
+        totalKlines = totalKlines.concat(data)
+        if (data.length === kLinesLimit) {
+          from = data[data.length - 1][0] + 1
+          getKlines(from, to)
+        } else {
+          finishKlines()
+        }
+      }
+      catch (e) {
+        console.error(e)
+        onErrorCallback(`Error in 'getKlines' func`)
+      }
     }
+
+    from *= 1000
+    to *= 1000
+    getKlines(from, to)
   }
 
   subscribeBars(symbolInfo, resolution, onRealtimeCallback, subscriberUID, onResetCacheNeededCallback) {

@@ -1,8 +1,7 @@
 @import "../../assets/scss/variables.scss";
-$headerHeight: 60px;
 .container {
   .trading-chart {
-    margin-top: 50px;
+    padding: 24px 24px 0 24px;
     display: flex;
     align-items: center;
     justify-content: center;
