@@ -1,27 +1,11 @@
 @import "../../assets/scss/variables.scss";
 $headerHeight: 60px;
 .container {
-  header {
-    height: $headerHeight;
-    margin-bottom: 60px;
-    background: $blue;
-    display: flex;
-    justify-content: center;
-    a {
-      font-size: 36px;
-      color: $bg-gray1;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      img {
-        width: 30px;
-        margin-right: 16px;
-      }
-    }
-  }
   .trading-chart {
+    margin-top: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
   }
 }

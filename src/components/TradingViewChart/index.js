@@ -1,54 +1,43 @@
-import React, {
-  Component,
-} from 'react'
-import './index.scss'
-
-import binanceAPI from '../../services/api'
-import { widget } from '../../scripts/charting_library/charting_library.esm'
-import { options } from '../../global/tv'
-
+import React, { Component } from "react";
+import binanceAPI from "../../services/api";
+import "./index.scss";
 export default class TradingViewChart extends Component {
-  constructor(props) {
-    super()
+  constructor({ chartProperties }) {
+    super();
     this.state = {
-      isChartReady: false
-    }
-    const { cOptions } = props
-    this.bfAPI = new binanceAPI({ debug: false })
+      isChartReady: false,
+    };
+    this.bfAPI = new binanceAPI({ debug: false });
     this.widgetOptions = {
       container_id: "chart_container",
       datafeed: this.bfAPI,
-      library_path: "../../scripts/charting_library/",
-      ...options,
-      ...cOptions // props override default values of constructor options
-    }
-    this.tradingViewWidget = null
-    this.chartObject = null
+      library_path: "/scripts/charting_library/",
+      symbol: 'BTCUSDT',
+      ...chartProperties
+    };
+    this.tradingViewWidget = null;
+    this.chartObject = null;
   }
 
   chartReady = () => {
+    if (!this.tradingViewWidget) return
     this.tradingViewWidget.onChartReady(() => {
-      this.setState({
-        isChartReady: true
-      })
-    })
-  }
+      this.chartObject = this.tradingViewWidget.activeChart();
+    });
+  };
 
   componentDidMount() {
-    this.tradingViewWidget = new widget(this.widgetOptions)
-    this.chartReady()
+    this.tradingViewWidget = window.tvWidget = new window.TradingView.widget(
+      this.widgetOptions
+    );
+    this.chartReady();
   }
 
   componentDidUpdate() {
-    // Use events and methods here. All events and methods available here
-    // Can use global context for changing/setting values 
-    this.chartObject = this.tradingViewWidget.chart()
-    this.tradingViewWidget.save((obj) => { })
+    if (!this.tradingViewWidget) return
   }
 
   render() {
-    return (
-      <div id='chart_container'></div>
-    )
+    return <div id="chart_container"></div>
   }
 }

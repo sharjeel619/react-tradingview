@@ -1,10 +1,7 @@
 export default class SocketClient {
   constructor(base_url, path) {
-    // 'wss://stream.binance.com:9443/ws'
-    // 'wss://streamer.cryptocompare.com'
-    this.baseUrl = 'wss://stream.binance.com:9443/ws' || base_url
-    this._path = path || ''
-    this._createSocket()
+    this.baseUrl = 'wss://stream.binance.com:9443/ws' || base_url;
+    this._path = path || '';
     this.tvIntervals = {
       '1': '1m',
       '3': '3m',
@@ -24,11 +21,12 @@ export default class SocketClient {
       '1W': '1w',
       'M': '1M',
       '1M': '1M',
-    }
-    this.lastSocketData = {}
-    this.listener = null,
-      this.paramStr = ''
-    this.streams = {} // e.g: {'BTCUSDT': { paramStr: '', data:{}, listener:  } }
+    };
+    this.lastSocketData = {};
+    this.listener = null;
+    this.paramStr = '';
+    this.streams = {}; // e.g: {'BTCUSDT': { paramStr: '', data:{}, listener:  } }
+    this._createSocket();
   }
 
   _createSocket() {

@@ -6,14 +6,6 @@ export default class binanceAPI {
     this.ws = new binanceWS()
   }
 
-  binanceServerTime() {
-    return fetch(this.binanceHost + '/api/v1/time').then(res => {
-      return res.json()
-    }).then(json => {
-      return json.serverTime
-    })
-  }
-
   binanceSymbols() {
     return fetch(this.binanceHost + '/api/v1/exchangeInfo').then(res => {
       return res.json()
@@ -23,7 +15,7 @@ export default class binanceAPI {
   }
 
   binanceKlines(symbol, interval, startTime, endTime, limit) {
-    const url = `${this.binanceHost}/api/v1/klines?symbol=${symbol}&interval=${interval}${startTime ? `&startTime=${startTime}` : ''}${endTime ? `&endTime=${endTime}`: ''}${limit ? `&limit=${limit}` : ''}`
+    const url = `${this.binanceHost}/api/v1/klines?symbol=${symbol}&interval=${interval}${startTime ? `&startTime=${startTime}` : ''}${endTime ? `&endTime=${endTime}` : ''}${limit ? `&limit=${limit}` : ''}`
 
     return fetch(url).then(res => {
       return res.json()
@@ -112,7 +104,7 @@ export default class binanceAPI {
     try {
       let interval = this.ws.tvIntervals[resolution]
       to *= 1000
-      let data = await this.binanceKlines(symbolInfo.name, interval ,null, to)
+      let data = await this.binanceKlines(symbolInfo.name, interval, null, to)
       if (!data || !data.length) onHistoryCallback([], { noData: true })
       else {
         data = data.map(item => ({
@@ -126,7 +118,7 @@ export default class binanceAPI {
         onHistoryCallback(data, { noData: true })
       }
     }
-    catch(e) {
+    catch (e) {
       console.error(e)
     }
   }
@@ -137,13 +129,5 @@ export default class binanceAPI {
 
   unsubscribeBars(subscriberUID) {
     this.ws.unsubscribeFromStream(subscriberUID)
-  }
-
-  getServerTime(callback) {
-    this.binanceServerTime().then(time => {
-      callback(Math.floor(time / 1000))
-    }).catch(err => {
-      console.error(err)
-    })
   }
 }
