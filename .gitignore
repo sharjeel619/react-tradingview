@@ -97,6 +97,6 @@ ehthumbs.db
 
 # Folder config file
 Desktop.ini
-
+.eslintcache
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
